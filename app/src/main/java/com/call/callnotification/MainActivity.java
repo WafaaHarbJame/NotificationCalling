@@ -33,11 +33,13 @@ public class MainActivity extends ActivityBase {
     MessageAdapter messageAdapter;
     SharedPManger sharedPManger;
     int last_id;
+    boolean isRefersh= false;
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver(){
 
         @Override
         public void onReceive(Context context, Intent intent){
-            if (intent.getAction().equals("newMessage")) {
+            if (intent.getAction().equals(Constants.newMessage)) {
+                isRefersh=true;
               getList();
 
             }
@@ -55,11 +57,19 @@ public class MainActivity extends ActivityBase {
         sharedPManger=new SharedPManger(getActiviy());
         last_id=sharedPManger.getDataInt(Constants.last_id,0);
 
-
         linearLayoutManager=new LinearLayoutManager(getActiviy());
         binding.rv.setLayoutManager(linearLayoutManager);
         getList();
         startService(new Intent(this, MessageService.class));
+
+        binding.refresh.setOnRefreshListener(() -> {
+            isRefersh=true;
+            list.clear();
+            binding.rv.setVisibility(View.GONE);
+            getList();
+
+
+        });
 
 
     }
@@ -69,9 +79,13 @@ public class MainActivity extends ActivityBase {
         binding.rv.setAdapter(messageAdapter);
 
     }
-    private void getList() {
-
-        GlobalData.progressDialog(getActiviy(), R.string.upload_date, R.string.please_wait_upload);
+     void getList() {
+         if(isRefersh){
+             binding.refresh.setRefreshing(true);
+         }
+         else {
+             GlobalData.progressDialog(getActiviy(),R.string.upload_date,R.string.please_wait_upload);
+         }
         new DataFeacher(getActiviy(), (obj, func, IsSuccess) -> {
             GlobalData.hideProgressDialog();
             NotificationModel result = (NotificationModel) obj;
@@ -80,9 +94,18 @@ public class MainActivity extends ActivityBase {
                 if (result != null && result.getMessage() != null) {
                     message = result.getMessage();
                 }
-                GlobalData.errorDialog(getActiviy(), R.string.fail_to_get_data, message);
+                binding.refresh.setRefreshing(false);
+                binding.rv.setVisibility(View.GONE);
+                binding.noData.setVisibility(View.VISIBLE);
+                binding.noData.setText(message);
+
+
             } else {
+
                 if (IsSuccess) {
+                    binding.refresh.setRefreshing(false);
+                    binding.rv.setVisibility(View.VISIBLE);
+                    binding.noData.setVisibility(View.GONE);
                     list = result.getData();
 //                    Log.i("tag","Log list "+list.size());
 //                    if(list.size()==0){
@@ -98,15 +121,18 @@ public class MainActivity extends ActivityBase {
                     list.add(new Notification(1,"message1","",200));
                     list.add(new Notification(2,"message2","",200));
                     list.add(new Notification(3,"message3","",200));
-                    list.add(new Notification(4,"message14","",200));
-                    initAdapter();
+                    list.add(new Notification(4,"message4","",200));
                     sharedPManger.SetData(Constants.last_id,list.get(list.size()-1).getId());
-
+                    initAdapter();
                     Log.i("tag","Log last id Main  "+list.get(list.size()-1).getId());
 
 
                 } else {
                     Toast(getString(R.string.fail_to_get_data));
+                    binding.refresh.setRefreshing(false);
+                    binding.noData.setVisibility(View.VISIBLE);
+                    binding.noData.setText(getString(R.string.fail_to_get_data));
+                    binding.rv.setVisibility(View.GONE);
 
                 }
             }
@@ -114,11 +140,14 @@ public class MainActivity extends ActivityBase {
 
         }).NotificationHandle(last_id);
 
-    }
+         binding.refresh.setRefreshing(false);
+
+
+     }
     @Override
     public void onResume() {
         super.onResume();
-        IntentFilter filter = new IntentFilter("newMessage");
+        IntentFilter filter = new IntentFilter(Constants.newMessage);
        registerReceiver(broadcastReceiver,filter);
 
     }
