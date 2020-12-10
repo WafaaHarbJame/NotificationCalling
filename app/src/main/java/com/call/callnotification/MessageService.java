@@ -94,37 +94,6 @@ public class MessageService extends Service {
         super.onTaskRemoved(rootIntent);
     }
 
-    private void getList() {
-        new DataFeacher((Activity) getApplicationContext(), (obj, func, IsSuccess) -> {
-            NotificationModel result = (NotificationModel) obj;
-            if (func.equals(Constants.ERROR)) {
-                String message = getString(R.string.fail_to_get_data);
-                if (result != null && result.getMessage() != null) {
-                    message = result.getMessage();
-                }
-            } else {
-                if (IsSuccess) {
-                   list = result.getData();
-
-                    MyNotificationModel myNotificationModel = list.get(list.size() - 1);
-                    Log.i("tag", "Log last id service   " + list.get(list.size() - 1).getId());
-
-                    if (last_id != myNotificationModel.getId()) {
-                        Log.i("tag", "Log list send " + last_id);
-                        sharedPManger.SetData(Constants.last_id, myNotificationModel.getId());
-                        sendNotification("Mech no is"+ myNotificationModel.getMechNo(), getString(R.string.new_message));
-                    }
-
-
-                }
-            }
-            startTimer(3);
-
-
-        }).NotificationHandle(last_id);
-
-    }
-
     public void sendNotification(String message, String title) {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -148,7 +117,6 @@ public class MessageService extends Service {
                 .setContentIntent(pendingIntent);
 
         notificationManager.notify((int) System.currentTimeMillis(), builder.build());
-      //  sendBroadcast(new Intent(Constants.newMessage));
 
 
     }
@@ -171,7 +139,6 @@ public class MessageService extends Service {
                 notificationManager.createNotificationChannel(adminChannel);
             }
         }
-     //   sendBroadcast(new Intent(Constants.newMessage));
 
     }
 
@@ -183,7 +150,6 @@ public class MessageService extends Service {
             }
 
             public void onFinish() {
-                //  getList();
                 GetList2(last_id);
             }
         };
