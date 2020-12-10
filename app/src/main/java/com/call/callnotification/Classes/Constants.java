@@ -11,6 +11,7 @@ public class Constants {
     public static final String ERROR = "error";
     public static final String NO_CONNECTION = "no connection";
     public static final String FAIL = "fail";
+    public static final String newMessage = "newMessage";
 
 
 }

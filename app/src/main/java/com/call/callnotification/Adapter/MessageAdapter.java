@@ -1,12 +1,14 @@
 package com.call.callnotification.Adapter;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.call.callnotification.Classes.Notification;
+import com.call.callnotification.Classes.MyNotificationModel;
+import com.call.callnotification.R;
 import com.call.callnotification.databinding.RowMessageBinding;
 
 import java.util.ArrayList;
@@ -14,9 +16,9 @@ import java.util.ArrayList;
 
 public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHolder> {
     private Context context;
-    private ArrayList<Notification> list;
+    private ArrayList<MyNotificationModel> list;
 
-    public MessageAdapter(Context context, ArrayList<Notification> list) {
+    public MessageAdapter(Context context, ArrayList<MyNotificationModel> list) {
         this.context = context;
         this.list = list;
 
@@ -31,9 +33,11 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        Notification notification = list.get(position);
+        MyNotificationModel myNotificationModel = list.get(position);
 
-        holder.binding.messageTv.setText(notification.getMessage());
+        holder.binding.messageTv.setText(context.getString(R.string.mech)+" "+ myNotificationModel.getMechNo());
+        Log.i("tag","Log list "+list.size());
+
 
     }
 

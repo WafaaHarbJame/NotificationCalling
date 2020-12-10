@@ -18,34 +18,33 @@ import com.call.callnotification.Adapter.MessageAdapter;
 import com.call.callnotification.ApiHandler.DataFeacher;
 import com.call.callnotification.Classes.Constants;
 import com.call.callnotification.Classes.GlobalData;
-import com.call.callnotification.Classes.Notification;
+import com.call.callnotification.Classes.MyNotificationModel;
 import com.call.callnotification.Classes.NotificationModel;
 import com.call.callnotification.Classes.SharedPManger;
 import com.call.callnotification.databinding.ActivityMainBinding;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class MainActivity extends ActivityBase {
     ActivityMainBinding binding;
-    ArrayList<Notification> list;
+    ArrayList<MyNotificationModel> list;
     LinearLayoutManager linearLayoutManager;
     MessageAdapter messageAdapter;
     SharedPManger sharedPManger;
-    int last_id;
+    int last_id=0;
     boolean isRefersh= false;
-    BroadcastReceiver broadcastReceiver = new BroadcastReceiver(){
-
-        @Override
-        public void onReceive(Context context, Intent intent){
-            if (intent.getAction().equals(Constants.newMessage)) {
-                isRefersh=true;
-              getList();
-
-            }
-        }
-
-    };
+//    BroadcastReceiver broadcastReceiver = new BroadcastReceiver(){
+//
+//        @Override
+//        public void onReceive(Context context, Intent intent){
+//            if (intent.getAction().equals(Constants.newMessage)) {
+//                isRefersh=true;
+//                GetList2();
+//
+//            }
+//        }
+//
+//    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,14 +58,13 @@ public class MainActivity extends ActivityBase {
 
         linearLayoutManager=new LinearLayoutManager(getActiviy());
         binding.rv.setLayoutManager(linearLayoutManager);
-        getList();
-        startService(new Intent(this, MessageService.class));
+        GetList2();
 
+        startService(new Intent(this, MessageService.class));
         binding.refresh.setOnRefreshListener(() -> {
             isRefersh=true;
-            list.clear();
-            binding.rv.setVisibility(View.GONE);
-            getList();
+            binding.noData.setVisibility(View.GONE);
+            GetList2();
 
 
         });
@@ -107,24 +105,25 @@ public class MainActivity extends ActivityBase {
                     binding.rv.setVisibility(View.VISIBLE);
                     binding.noData.setVisibility(View.GONE);
                     list = result.getData();
-//                    Log.i("tag","Log list "+list.size());
-//                    if(list.size()==0){
-//                        binding.noData.setVisibility(View.VISIBLE);
-//                        binding.rv.setVisibility(View.GONE);
-//                    }
-//                    else {
-//                        binding.noData.setVisibility(View.GONE);
-//                        binding.rv.setVisibility(View.VISIBLE);
-//                        initAdapter();
-//
-//                    }
-                    list.add(new Notification(1,"message1","",200));
-                    list.add(new Notification(2,"message2","",200));
-                    list.add(new Notification(3,"message3","",200));
-                    list.add(new Notification(4,"message4","",200));
-                    sharedPManger.SetData(Constants.last_id,list.get(list.size()-1).getId());
-                    initAdapter();
-                    Log.i("tag","Log last id Main  "+list.get(list.size()-1).getId());
+                    Log.i("tag","Log list "+list.size());
+                    if(list.size()==0){
+                        binding.noData.setVisibility(View.VISIBLE);
+                        binding.rv.setVisibility(View.GONE);
+                    }
+                    else {
+                        sharedPManger.SetData(Constants.last_id,list.get(list.size()-1).getId());
+                        binding.noData.setVisibility(View.GONE);
+                        binding.rv.setVisibility(View.VISIBLE);
+                        initAdapter();
+
+                    }
+//                    list.add(new MyNotificationModel(1,"message1","",200));
+//                    list.add(new MyNotificationModel(2,"message2","",200));
+//                    list.add(new MyNotificationModel(3,"message3","",200));
+//                    list.add(new MyNotificationModel(4,"message4","",200));
+//                    sharedPManger.SetData(Constants.last_id,list.get(list.size()-1).getId());
+//                    initAdapter();
+//                    Log.i("tag","Log last id Main  "+list.get(list.size()-1).getId());
 
 
                 } else {
@@ -144,24 +143,87 @@ public class MainActivity extends ActivityBase {
 
 
      }
-    @Override
-    public void onResume() {
-        super.onResume();
-        IntentFilter filter = new IntentFilter(Constants.newMessage);
-       registerReceiver(broadcastReceiver,filter);
+//    @Override
+//    public void onResume() {
+//        super.onResume();
+//        IntentFilter filter = new IntentFilter(Constants.newMessage);
+//       registerReceiver(broadcastReceiver,filter);
+//
+//    }
 
-    }
 
+//    @Override
+//    public void onPause() {
+//        super.onPause();
+//
+//        if (broadcastReceiver != null) {
+//           unregisterReceiver(broadcastReceiver);
+//        }
+//
+//
+//    }
 
-    @Override
-    public void onPause() {
-        super.onPause();
+    public void GetList2() {
+        list.clear();
+        binding.noData.setVisibility(View.GONE);
 
-        if (broadcastReceiver != null) {
-           unregisterReceiver(broadcastReceiver);
+        if(isRefersh){
+            binding.refresh.setRefreshing(true);
         }
+        else {
+            GlobalData.progressDialog(getActiviy(),R.string.upload_date,R.string.please_wait_upload);
+        }
+        Log.i("tag", "Log list finish GetList2 " + last_id);
+        AndroidNetworking.get("https://risteh.com/Cashiers/api/v1/Notification").addQueryParameter("last_id",
+                String.valueOf(last_id)).addHeaders("ApiKey",
+                Constants.api_key).setTag(this).setPriority(Priority.LOW).
+                setPriority(Priority.MEDIUM).build().getAsObject(NotificationModel.class,
+                new ParsedRequestListener<NotificationModel>() {
+                    @Override
+                    public void onResponse(NotificationModel notificationModel) {
+                        GlobalData.hideProgressDialog();
+                        list=notificationModel.getData();
+                        binding.refresh.setRefreshing(false);
+                        binding.rv.setVisibility(View.VISIBLE);
+                        Log.i("tag","Log list "+list.size());
+                        if(list.size()==0){
+                            binding.noData.setVisibility(View.VISIBLE);
+                            binding.rv.setVisibility(View.GONE);
+                        }
+                        else {
+                            sharedPManger.SetData(Constants.last_id,list.get(list.size()-1).getId());
+                            binding.noData.setVisibility(View.GONE);
+                            binding.rv.setVisibility(View.VISIBLE);
+                            initAdapter();
+
+                        }
+
+
+                    }
+
+                    @Override
+                    public void onError(ANError anError) {
+                        anError.printStackTrace();
+                        String message = getString(R.string.fail_to_get_data);
+                        if (anError != null && anError.getMessage() != null) {
+                            message = anError.getMessage();
+                        }
+                        binding.refresh.setRefreshing(false);
+                        binding.rv.setVisibility(View.GONE);
+                        binding.noData.setVisibility(View.VISIBLE);
+                        binding.noData.setText(message);
+                        GlobalData.hideProgressDialog();
+
+                    }
+
+                });
 
 
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        startService(new Intent(this, MessageService.class));
+    }
 }

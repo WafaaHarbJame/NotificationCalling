@@ -30,6 +30,7 @@
             android:layout_gravity="center"
             android:padding="@dimen/_8sdp"
             android:textColor="@color/black"
+            android:textSize="@dimen/_15ssp"
             android:text="message" />
 
 

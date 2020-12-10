@@ -2,9 +2,15 @@ package com.call.callnotification;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
+import android.os.Build;
+
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.content.ContextCompat;
 import androidx.multidex.MultiDex;
+
+import com.androidnetworking.AndroidNetworking;
 import com.call.callnotification.Classes.SharedPManger;
 
 
@@ -40,9 +46,13 @@ public class RootApplication extends Application {
 
         rootApplication = this;
         sharedPManger = new SharedPManger(this);
+        AndroidNetworking.initialize(getApplicationContext());
 
-
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            ContextCompat.startForegroundService(this, new Intent(this,MessageService.class));
+        } else {
+            this.startService( new Intent(this,MessageService.class));
+        }
 
 
     }

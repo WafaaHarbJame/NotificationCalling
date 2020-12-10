@@ -1,8 +1,9 @@
 <resources>
-    <string name="app_name">Notification Calling</string>
+    <string name="app_name">Calling</string>
     <string name="upload_date">Upload Data</string>
     <string name="please_wait_upload">please wait upload</string>
     <string name="fail_to_get_data">fail to get data</string>
-    <string name="no_data">No Messages</string>
-    <string name="new_message">New Message</string>
+    <string name="no_data">لا يوجد رسائل</string>
+    <string name="new_message">رسالة جديدة </string>
+    <string name="mech">نداء الى  الكاشير رقم </string>
 </resources>
