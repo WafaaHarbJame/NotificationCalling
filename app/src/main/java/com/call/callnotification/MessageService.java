@@ -22,6 +22,7 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
+
 import com.androidnetworking.AndroidNetworking;
 import com.androidnetworking.common.Priority;
 import com.androidnetworking.error.ANError;
@@ -70,16 +71,14 @@ public class MessageService extends Service {
         NotificationChannel notificationChannel = null;
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            notificationChannel = new NotificationChannel(CHANNEL_ONE_ID,
-                    CHANNEL_ONE_NAME, NotificationManager.IMPORTANCE_DEFAULT);
+            notificationChannel = new NotificationChannel(CHANNEL_ONE_ID, CHANNEL_ONE_NAME, NotificationManager.IMPORTANCE_DEFAULT);
             notificationChannel.enableLights(true);
             notificationChannel.setLightColor(Color.YELLOW);
             notificationChannel.setShowBadge(false);
             NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
             manager.createNotificationChannel(notificationChannel);
             AudioAttributes attributes = new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION).build();
-            notificationChannel.setSound(Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://"
-                    + getPackageName() + "/raw/notification_sound"), attributes);
+            notificationChannel.setSound(Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + getPackageName() + "/raw/notification_sound"), attributes);
 
             int NOTIFICATION_ID = (int) (System.currentTimeMillis() % 10000);
             startForeground(NOTIFICATION_ID, new Notification.Builder(this, CHANNEL_ONE_ID).build());
@@ -102,19 +101,9 @@ public class MessageService extends Service {
         Intent intent;
         intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
-                intent, PendingIntent.FLAG_ONE_SHOT);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT);
         Bitmap largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.logo_512);
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setLargeIcon(largeIcon).setContentTitle(title)
-                .setContentText(message).setSmallIcon( R.drawable.logo_512)
-                .setAutoCancel(true)
-                .setSound(Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://"
-                                + getPackageName() + "/raw/notification_sound"),
-                        AudioManager.STREAM_NOTIFICATION)
-                .setColor(ContextCompat.getColor(getApplicationContext(), R.color.colorPrimary))
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setContentIntent(pendingIntent);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID).setLargeIcon(largeIcon).setContentTitle(title).setContentText(message).setSmallIcon(R.drawable.logo_512).setAutoCancel(true).setSound(Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + getPackageName() + "/raw/notification_sound"), AudioManager.STREAM_NOTIFICATION).setColor(ContextCompat.getColor(getApplicationContext(), R.color.colorPrimary)).setPriority(NotificationCompat.PRIORITY_HIGH).setContentIntent(pendingIntent);
 
         notificationManager.notify((int) System.currentTimeMillis(), builder.build());
 
@@ -132,8 +121,7 @@ public class MessageService extends Service {
             adminChannel.setLightColor(Color.RED);
             adminChannel.enableVibration(true);
             AudioAttributes attributes = new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION).build();
-            adminChannel.setSound(Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + getPackageName() +
-                    "/raw/notification_sound"), attributes);
+            adminChannel.setSound(Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + getPackageName() + "/raw/notification_sound"), attributes);
 
             if (notificationManager != null) {
                 notificationManager.createNotificationChannel(adminChannel);
@@ -157,38 +145,36 @@ public class MessageService extends Service {
     }
 
     public void GetList2(int last_id) {
-        list.clear();;
+        list.clear();
+        ;
 
         Log.i("tag", "Log list finish GetList2 " + last_id);
-        AndroidNetworking.get("https://risteh.com/Cashiers/api/v1/Notification").addQueryParameter("last_id",
-                String.valueOf(last_id)).addHeaders("ApiKey",
-                Constants.api_key).setTag(this).setPriority(Priority.LOW).
-               setPriority(Priority.MEDIUM).build().getAsObject(NotificationModel.class,
-                new ParsedRequestListener<NotificationModel>() {
-                    @Override
-                    public void onResponse(NotificationModel notificationModel) {
-                        list=notificationModel.getData();
+        AndroidNetworking.get("https://risteh.com/Cashiers/api/v1/Notification").addQueryParameter("last_id", String.valueOf(last_id)).addHeaders("ApiKey", Constants.api_key).setTag(this).setPriority(Priority.LOW).
+                setPriority(Priority.MEDIUM).build().getAsObject(NotificationModel.class, new ParsedRequestListener<NotificationModel>() {
+            @Override
+            public void onResponse(NotificationModel notificationModel) {
+                list = notificationModel.getData();
 
-                        if(list.size()>0){
-                            MyNotificationModel myNotificationModel = list.get(list.size() - 1);
-                            Log.i("tag", "Log last id service   " + list.get(list.size() - 1).getId());
+                if (list.size() > 0) {
+                    MyNotificationModel myNotificationModel = list.get(list.size() - 1);
+                    Log.i("tag", "Log last id service   " + list.get(list.size() - 1).getId());
 
-                            if (last_id != myNotificationModel.getId()) {
-                                Log.i("tag", "Log list end now  " + myNotificationModel.getId());
-                                sharedPManger.SetData(Constants.last_id, myNotificationModel.getId());
-                                sendNotification(getString(R.string.mech)+" "+ myNotificationModel.getMechNo(), getString(R.string.new_message));
-                            }
-
-                        }
-
+                    if (last_id != myNotificationModel.getId()) {
+                        Log.i("tag", "Log list end now  " + myNotificationModel.getId());
+                        sharedPManger.SetData(Constants.last_id, myNotificationModel.getId());
+                        sendNotification(getString(R.string.mech) + " " + myNotificationModel.getMechNo(), getString(R.string.new_message));
                     }
 
-                    @Override
-                    public void onError(ANError anError) {
-                        anError.printStackTrace();
-                        // handle error
-                    }
-                });
+                }
+
+            }
+
+            @Override
+            public void onError(ANError anError) {
+                anError.printStackTrace();
+                // handle error
+            }
+        });
 
         startTimer(3);
     }
