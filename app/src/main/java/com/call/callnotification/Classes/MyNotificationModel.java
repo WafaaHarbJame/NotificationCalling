@@ -1,4 +1,5 @@
 package com.call.callnotification.Classes;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -12,7 +13,7 @@ public class MyNotificationModel {
     private String date;
     @SerializedName("id")
     @Expose
-    private Integer id;
+    private int id;
 
     public Integer getMechNo() {
         return mechNo;
@@ -30,7 +31,7 @@ public class MyNotificationModel {
         this.date = date;
     }
 
-    public Integer getId() {
+    public int getId() {
         return id;
     }
 

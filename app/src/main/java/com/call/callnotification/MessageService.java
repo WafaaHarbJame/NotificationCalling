@@ -18,6 +18,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.CountDownTimer;
 import android.os.IBinder;
+import android.os.Message;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
@@ -34,14 +35,19 @@ import com.call.callnotification.Classes.NotificationModel;
 import com.call.callnotification.Classes.SharedPManger;
 
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MessageService extends Service {
     private static final String CHANNEL_ID = "channel_id";
     Context context;
     ArrayList<MyNotificationModel> list;
     SharedPManger sharedPManger;
-    int last_id;
+    //    int last_id;
     CountDownTimer cTimer = null;
+    private Timer timer;
+    private final long DELAY_TIME = 3 * 1000;
+    boolean isRun;
     private NotificationManager notificationManager;
 
     @Override
@@ -57,14 +63,17 @@ public class MessageService extends Service {
         context = this;
         list = new ArrayList<>();
         sharedPManger = new SharedPManger(getApplicationContext());
-        last_id = sharedPManger.getDataInt(Constants.last_id, 0);
-        Log.i("tag", "Log list Service " + last_id);
+//        last_id = sharedPManger.getDataInt(Constants.last_id, 1);
+//        Log.i("tag", "Log list Service " + last_id);
+
+        timer = new Timer();
+        timer.scheduleAtFixedRate(new ProgressUpdate(), 0, DELAY_TIME);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        startTimer(3);
+
 
         String CHANNEL_ONE_ID = "The Calling";
         String CHANNEL_ONE_NAME = "Calling_channel";
@@ -77,13 +86,15 @@ public class MessageService extends Service {
             notificationChannel.setShowBadge(false);
             NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
             AudioAttributes attributes = new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION).build();
-            notificationChannel.setSound(Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://"
-                    + getPackageName() + "/raw/notification_sound"), attributes);
+            notificationChannel.setSound(Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + getPackageName() + "/raw/notification_sound"), attributes);
             manager.createNotificationChannel(notificationChannel);
 
             int NOTIFICATION_ID = (int) (System.currentTimeMillis() % 10000);
             startForeground(NOTIFICATION_ID, new Notification.Builder(this, CHANNEL_ONE_ID).build());
         }
+
+//        startTimer(3);
+
         return START_STICKY;
     }
 
@@ -94,7 +105,7 @@ public class MessageService extends Service {
         super.onTaskRemoved(rootIntent);
     }
 
-    public void sendNotification(String message, String title) {
+    public void sendNotification(int id, String message, String title) {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             setupChannels();
@@ -103,16 +114,22 @@ public class MessageService extends Service {
         intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT);
-        Bitmap largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.logo_512);
+
+        Bitmap largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.logo_meduim);
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setLargeIcon(largeIcon).setContentTitle(title)
-                .setContentText(message).setSmallIcon(R.drawable.logo_512)
+                .setLargeIcon(largeIcon)
+                .setContentTitle(title)
+                .setContentText(message)
+                .setSmallIcon(R.drawable.logo_small)
                 .setAutoCancel(true)
-                .setSound(Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + getPackageName() + "/raw/notification_sound"),
-                        AudioManager.STREAM_NOTIFICATION)
-                .setColor(ContextCompat.getColor(getApplicationContext(),
-                        R.color.colorPrimary)).setPriority(NotificationCompat.PRIORITY_HIGH).setContentIntent(pendingIntent);
-        notificationManager.notify((int) System.currentTimeMillis(), builder.build());
+                .setSound(Uri.parse("android.resource://" + getPackageName() + "/raw/notification_sound"))
+//                .setSound(Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + getPackageName() + "/raw/notification_sound"), AudioManager.STREAM_NOTIFICATION)
+                .setColor(ContextCompat.getColor(getApplicationContext(), R.color.colorPrimary))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(pendingIntent);
+
+        notificationManager.notify(id, builder.build());
 
 
     }
@@ -137,52 +154,59 @@ public class MessageService extends Service {
 
     }
 
-    void startTimer(long timeSeconds) {
+    private class ProgressUpdate extends TimerTask {
 
-        cTimer = new CountDownTimer(timeSeconds * 1000, 1000) {
-            public void onTick(long millisUntilFinished) {
-            }
+        ProgressUpdate() {
+            super();
+        }
 
-            public void onFinish() {
-                GetList2(last_id);
-            }
-        };
-        cTimer.start();
+        @Override
+        public void run() {
+
+            GetList2();
+        }
     }
 
-    public void GetList2(int last_id) {
-        list.clear();
-        ;
 
+    public void GetList2() {
+
+        int last_id = sharedPManger.getDataInt(Constants.last_id, 0);
         Log.i("tag", "Log list finish GetList2 " + last_id);
-        AndroidNetworking.get("https://risteh.com/Cashiers/api/v1/Notification").addQueryParameter("last_id", String.valueOf(last_id)).addHeaders("ApiKey", Constants.api_key).setTag(this).setPriority(Priority.LOW).
-                setPriority(Priority.MEDIUM).build().getAsObject(NotificationModel.class, new ParsedRequestListener<NotificationModel>() {
-            @Override
-            public void onResponse(NotificationModel notificationModel) {
-                list = notificationModel.getData();
 
-                if (list.size() > 0) {
-                    MyNotificationModel myNotificationModel = list.get(list.size() - 1);
-                    Log.i("tag", "Log last id service   " + list.get(list.size() - 1).getId());
+        AndroidNetworking.get("https://risteh.com/Cashiers/api/v1/Notification")
+                .addQueryParameter("last_id", String.valueOf(last_id))
+                .addHeaders("ApiKey", Constants.api_key).setTag(this).setPriority(Priority.LOW).
+                setPriority(Priority.MEDIUM).build()
+                .getAsObject(NotificationModel.class, new ParsedRequestListener<NotificationModel>() {
+                    @Override
+                    public void onResponse(NotificationModel notificationModel) {
+                        list = notificationModel.getData();
 
-                    if (last_id != myNotificationModel.getId()) {
-                        Log.i("tag", "Log list end now  " + myNotificationModel.getId());
-                        sharedPManger.SetData(Constants.last_id, myNotificationModel.getId());
-                        sendNotification(getString(R.string.mech) + " " + myNotificationModel.getMechNo(), getString(R.string.new_message));
+                        if (list.size() > 0) {
+                            MyNotificationModel myNotificationModel = list.get(list.size() - 1);
+//                            Log.i("tag", "Log list last id" + list.get(list.size() - 1).getId());
+
+                            int last_id = sharedPManger.getDataInt(Constants.last_id, 0);
+                            Log.i("tag", "Log list finish GetList2 " + last_id);
+
+                            if (last_id < myNotificationModel.getId()) {
+                                Log.i("tag", "Log list end now  " + myNotificationModel.getId());
+                                sharedPManger.SetData(Constants.last_id, myNotificationModel.getId());
+                                sendNotification(myNotificationModel.getId(), getString(R.string.mech) + " " + myNotificationModel.getMechNo(), getString(R.string.new_message));
+                            }
+
+                        }
+
                     }
 
-                }
+                    @Override
+                    public void onError(ANError anError) {
+                        anError.printStackTrace();
+                        // handle error
+                    }
+                });
 
-            }
 
-            @Override
-            public void onError(ANError anError) {
-                anError.printStackTrace();
-                // handle error
-            }
-        });
-
-        startTimer(3);
     }
 }
 
