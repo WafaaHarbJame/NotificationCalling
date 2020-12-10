@@ -103,8 +103,14 @@ public class MessageService extends Service {
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT);
         Bitmap largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.logo_512);
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID).setLargeIcon(largeIcon).setContentTitle(title).setContentText(message).setSmallIcon(R.drawable.logo_512).setAutoCancel(true).setSound(Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + getPackageName() + "/raw/notification_sound"), AudioManager.STREAM_NOTIFICATION).setColor(ContextCompat.getColor(getApplicationContext(), R.color.colorPrimary)).setPriority(NotificationCompat.PRIORITY_HIGH).setContentIntent(pendingIntent);
-
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setLargeIcon(largeIcon).setContentTitle(title)
+                .setContentText(message).setSmallIcon(R.drawable.logo_512)
+                .setAutoCancel(true)
+                .setSound(Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + getPackageName() + "/raw/notification_sound"),
+                        AudioManager.STREAM_NOTIFICATION)
+                .setColor(ContextCompat.getColor(getApplicationContext(),
+                        R.color.colorPrimary)).setPriority(NotificationCompat.PRIORITY_HIGH).setContentIntent(pendingIntent);
         notificationManager.notify((int) System.currentTimeMillis(), builder.build());
 
 
