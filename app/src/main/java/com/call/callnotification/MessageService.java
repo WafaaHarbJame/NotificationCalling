@@ -76,9 +76,9 @@ public class MessageService extends Service {
             notificationChannel.setLightColor(Color.YELLOW);
             notificationChannel.setShowBadge(false);
             NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-            manager.createNotificationChannel(notificationChannel);
             AudioAttributes attributes = new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION).build();
             notificationChannel.setSound(Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + getPackageName() + "/raw/notification_sound"), attributes);
+            manager.createNotificationChannel(notificationChannel);
 
             int NOTIFICATION_ID = (int) (System.currentTimeMillis() % 10000);
             startForeground(NOTIFICATION_ID, new Notification.Builder(this, CHANNEL_ONE_ID).build());
